@@ -7,7 +7,9 @@
     "start": "node src/db/migrate.js && node src/server.js",
     "dev": "nodemon src/server.js",
     "migrate": "node src/db/migrate.js",
-    "check-now": "node src/scripts/runOnce.js"
+    "check-now": "node src/scripts/runOnce.js",
+    "check-now": "node src/scripts/runOnce.js",
+"postinstall": "npx puppeteer browsers install chrome"
   },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
