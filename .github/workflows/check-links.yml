@@ -1,0 +1,16 @@
+name: RasadLink Check
+
+on:
+  schedule:
+    # هر ۱۲ دقیقه
+    - cron: '*/12 * * * *'
+  workflow_dispatch: {} # اجازه‌ی اجرای دستی از تب Actions
+
+jobs:
+  trigger-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/run-check
+        run: |
+          curl -sf -X POST "https://foozol.onrender.com/api/cron/run-check" \
+            -H "X-Cron-Secret: ${{ secrets.CRON_SECRET }}"
