@@ -3,12 +3,15 @@
   "version": "1.0.0",
   "description": "بک‌اند رصدلینک — رصد خودکار تغییرات محتوایی سایت‌ها با اسکرین‌شات و اعلان",
   "main": "src/server.js",
-"scripts": {
-"start": "rm -rf \"$(pwd)/chrome-bin\"; npx puppeteer browsers install chrome --path=\"$(pwd)/chrome-bin\" && node src/db/migrate.js && node src/server.js",
-  "check-now": "node src/scripts/runOnce.js"
-},
+  "scripts": {
+    "start": "node src/db/migrate.js && node src/server.js",
+    "dev": "nodemon src/server.js",
+    "migrate": "node src/db/migrate.js",
+    "check-now": "node src/scripts/runOnce.js"
+  },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
+    "@sparticuz/chromium": "^127.0.0",
     "cors": "^2.8.5",
     "diff": "^5.2.0",
     "dotenv": "^16.4.5",
@@ -19,7 +22,7 @@
     "node-cron": "^3.0.3",
     "p-limit": "^3.1.0",
     "pg": "^8.12.0",
-    "puppeteer": "^22.13.1"
+    "puppeteer-core": "^22.13.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
