@@ -4,8 +4,7 @@
   "description": "بک‌اند رصدلینک — رصد خودکار تغییرات محتوایی سایت‌ها با اسکرین‌شات و اعلان",
   "main": "src/server.js",
 "scripts": {
-  "start": "npx puppeteer browsers install chrome && node src/db/migrate.js && node src/server.js",
-  "dev": "nodemon src/server.js",
+"start": "rm -rf chrome-bin; npx puppeteer browsers install chrome && node src/db/migrate.js && node src/server.js",  "dev": "nodemon src/server.js",
   "migrate": "node src/db/migrate.js",
   "check-now": "node src/scripts/runOnce.js"
 },
