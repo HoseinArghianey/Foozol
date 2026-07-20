@@ -1,9 +1,9 @@
-const puppeteer = require('puppeteer');
 const pool = require('../db/pool');
 const { ApiError } = require('../middleware/errorHandler');
 const { timeAgoFa } = require('../utils/timeAgo');
 const { deleteScreenshot, screenshotPublicUrl } = require('../services/screenshotService');
 const { checkLink } = require('../services/linkService');
+const { launchBrowser } = require('../services/browserLauncher');
 
 function normalizeUrl(rawUrl) {
   const trimmed = (rawUrl || '').trim();
@@ -134,15 +134,7 @@ async function checkLinkNow(req, res) {
   const { rows } = await pool.query('SELECT * FROM links WHERE id = $1', [id]);
   if (!rows.length) throw new ApiError(404, 'لینک پیدا نشد');
 
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-    ],
-  });
+  const browser = await launchBrowser();
   let result;
   try {
     result = await checkLink(browser, rows[0]);
