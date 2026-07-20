@@ -1,9 +1,9 @@
 const cron = require('node-cron');
-const puppeteer = require('puppeteer');
 const pLimit = require('p-limit');
 const pool = require('../db/pool');
 const config = require('../config');
 const { checkLink } = require('./linkService');
+const { launchBrowser } = require('./browserLauncher');
 const logger = require('../utils/logger');
 
 let isRunning = false;
@@ -31,15 +31,7 @@ async function runCheckCycle() {
 
     logger.info(`شروع چرخه بررسی برای ${links.length} لینک...`);
 
-    const browser = await puppeteer.launch({
-      headless: 'new',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage', // در کانتینرهای کم‌حافظه (مثل هاست رایگان)، /dev/shm کوچک است و بدون این فلگ کروم کرش می‌کند
-        '--disable-gpu',
-      ],
-    });
+    const browser = await launchBrowser();
 
     const limit = pLimit(config.checkConcurrency);
     const results = await Promise.all(
