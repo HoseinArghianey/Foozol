@@ -1,5 +1,5 @@
 const { join } = require('path');
 
 module.exports = {
-  cacheDirectory: join(__dirname, 'puppeteer-browser-cache'),
+  cacheDirectory: join(__dirname, 'chrome-bin'),
 };
