@@ -1,9 +1,11 @@
 const pool = require('../db/pool');
 const { ApiError } = require('../middleware/errorHandler');
 const { timeAgoFa } = require('../utils/timeAgo');
-const { deleteScreenshot, screenshotPublicUrl } = require('../services/screenshotService');
+const { deleteScreenshot, saveScreenshot, screenshotPublicUrl } = require('../services/screenshotService');
 const { checkLink } = require('../services/linkService');
 const { launchBrowser } = require('../services/browserLauncher');
+const config = require('../config');
+const logger = require('../utils/logger');
 
 function normalizeUrl(rawUrl) {
   const trimmed = (rawUrl || '').trim();
@@ -25,8 +27,6 @@ function toDomain(url) {
   }
 }
 
-// شکل خروجی دقیقاً منطبق با چیزی است که فرانت‌اند فعلی (آرایه‌ی links) انتظار دارد
-// + چند فیلد اضافه‌ی مفید (id، url کامل، آدرس اسکرین‌شات) برای تعامل کامل با بک‌اند.
 function serialize(row) {
   return {
     id: row.id,
@@ -86,7 +86,6 @@ async function createLink(req, res) {
     res.status(201).json(serialize({ ...rows[0], unread_count: 0 }));
   } catch (err) {
     if (err.code === '23505') {
-      // نقض قید UNIQUE روی url
       throw new ApiError(409, 'این لینک قبلاً ثبت شده است');
     }
     throw err;
@@ -128,25 +127,52 @@ async function deleteLink(req, res) {
   res.status(204).send();
 }
 
-// بررسی فوری و دستیِ یک لینک (بدون نیاز به منتظر ماندن برای چرخه‌ی ساعتی)
 async function checkLinkNow(req, res) {
   const { id } = req.params;
   const { rows } = await pool.query('SELECT * FROM links WHERE id = $1', [id]);
   if (!rows.length) throw new ApiError(404, 'لینک پیدا نشد');
 
-  const browser = await launchBrowser();
-  let result;
-  try {
-    result = await checkLink(browser, rows[0]);
-  } finally {
-    await browser.close();
-  }
+  const result = await checkLink(rows[0]);
 
   const { rows: updated } = await pool.query(`${LIST_QUERY} WHERE links.id = $1`, [id]);
   res.json({ result, link: serialize(updated[0]) });
 }
 
-// تاریخچه‌ی تغییرات یک لینک خاص
+// اسکرین‌شات درخواستیِ کاربر (on-demand): تنها جایی که Puppeteer صدا زده می‌شود.
+async function requestScreenshot(req, res) {
+  const { id } = req.params;
+  const { rows } = await pool.query('SELECT * FROM links WHERE id = $1', [id]);
+  if (!rows.length) throw new ApiError(404, 'لینک پیدا نشد');
+
+  const link = rows[0];
+  let browser;
+  try {
+    browser = await launchBrowser();
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1366, height: 900 });
+    await page.goto(link.url, { waitUntil: 'networkidle2', timeout: config.scrapeTimeoutMs });
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const buffer = await page.screenshot({ fullPage: true, type: 'png' });
+    await page.close();
+
+    const { relativePath } = await saveScreenshot(buffer, id);
+    if (link.current_screenshot_path) {
+      await deleteScreenshot(link.current_screenshot_path);
+    }
+    await pool.query('UPDATE links SET current_screenshot_path = $1 WHERE id = $2', [
+      relativePath,
+      id,
+    ]);
+
+    res.json({ screenshotUrl: screenshotPublicUrl(relativePath) });
+  } catch (err) {
+    logger.error(`خطا در گرفتن اسکرین‌شات درخواستی برای لینک ${id}: ${err.message}`);
+    throw new ApiError(502, 'گرفتن اسکرین‌شات ناموفق بود؛ ممکن است سایت در دسترس نباشد.');
+  } finally {
+    if (browser) await browser.close();
+  }
+}
+
 async function getLinkHistory(req, res) {
   const { id } = req.params;
   const { rows } = await pool.query(
@@ -158,13 +184,13 @@ async function getLinkHistory(req, res) {
       id: r.id,
       detectedAt: r.detected_at,
       time: timeAgoFa(r.detected_at),
+      changeType: r.change_type,
       addedPreview: r.added_preview,
       addedChars: r.added_chars,
     }))
   );
 }
 
-// علامت‌گذاری اعلان‌های یک لینک به‌عنوان دیده‌شده (خاموش کردن بج «تغییر جدید»)
 async function dismissLinkChanges(req, res) {
   const { id } = req.params;
   await pool.query('UPDATE notifications SET is_read = true WHERE link_id = $1', [id]);
@@ -180,6 +206,7 @@ module.exports = {
   updateLink,
   deleteLink,
   checkLinkNow,
+  requestScreenshot,
   getLinkHistory,
   dismissLinkChanges,
 };
