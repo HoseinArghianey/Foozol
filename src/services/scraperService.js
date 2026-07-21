@@ -129,7 +129,9 @@ function normalizeUrl(rawUrl, baseUrl) {
 /**
  * از HTML، تمام لینک‌های داخلی (همان دامنه) و آدرس تصاویر را استخراج می‌کند.
  * این برای تشخیص «صفحه/لینک جدید» و «تصویر/بنر جدید» استفاده می‌شود —
- * مستقل از diff متنیِ محتوای اصلی.
+ * مستقل از diff متنیِ محتوای اصلی. برای هر آیتم، متن اطراف (متن لینک یا
+ * alt تصویر) هم برگردانده می‌شود تا در صورت نیاز به هوش‌مصنوعی داده شود
+ * (برای تشخیص «تبلیغ در برابر محتوای واقعی»).
  */
 function extractLinksAndImages(html, url) {
   const dom = new JSDOM(html, { url });
@@ -145,6 +147,7 @@ function extractLinksAndImages(html, url) {
   });
 
   const links = new Set();
+  const linkContext = {};
   document.querySelectorAll('a[href]').forEach((a) => {
     const normalized = normalizeUrl(a.getAttribute('href'), url);
     if (!normalized) return;
@@ -153,6 +156,9 @@ function extractLinksAndImages(html, url) {
       // تبلیغاتی/شبکه‌اجتماعی خارجی نویز تولید نکنند
       if (new URL(normalized).hostname === baseHost) {
         links.add(normalized);
+        if (!linkContext[normalized]) {
+          linkContext[normalized] = (a.textContent || '').trim().slice(0, 200);
+        }
       }
     } catch (err) {
       // نادیده گرفته می‌شود
@@ -160,14 +166,22 @@ function extractLinksAndImages(html, url) {
   });
 
   const images = new Set();
+  const imageContext = {};
   document.querySelectorAll('img[src]').forEach((img) => {
     const normalized = normalizeUrl(img.getAttribute('src'), url);
-    if (normalized) images.add(normalized);
+    if (normalized) {
+      images.add(normalized);
+      if (!imageContext[normalized]) {
+        imageContext[normalized] = (img.getAttribute('alt') || '').trim().slice(0, 200);
+      }
+    }
   });
 
   return {
     links: Array.from(links).sort(),
     images: Array.from(images).sort(),
+    linkContext,
+    imageContext,
   };
 }
 
