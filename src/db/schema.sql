@@ -22,15 +22,23 @@ CREATE TABLE IF NOT EXISTS links (
 CREATE INDEX IF NOT EXISTS idx_links_category ON links(category);
 CREATE INDEX IF NOT EXISTS idx_links_status ON links(status);
 
+-- لیست لینک‌ها و تصاویرِ شناخته‌شده از آخرین بررسی (برای تشخیص «لینک/تصویر جدید»
+-- بدون نیاز به مرورگر — فقط با مقایسه‌ی این آرایه با نسخه‌ی جدیدِ استخراج‌شده)
+ALTER TABLE links ADD COLUMN IF NOT EXISTS known_links  JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE links ADD COLUMN IF NOT EXISTS known_images JSONB NOT NULL DEFAULT '[]'::jsonb;
+
 -- تاریخچه‌ی تغییرات محتوایی (فقط متادیتا؛ چون تصویر قبلی طبق سیاست پروژه حذف می‌شود)
 CREATE TABLE IF NOT EXISTS change_logs (
   id               SERIAL PRIMARY KEY,
   link_id          INTEGER NOT NULL REFERENCES links(id) ON DELETE CASCADE,
   detected_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-  added_preview    TEXT,          -- خلاصه‌ای از محتوای جدید اضافه‌شده
-  added_chars      INTEGER,       -- حجم محتوای جدید (کاراکتر)
+  change_type      TEXT NOT NULL DEFAULT 'content', -- 'content' | 'new_link' | 'new_image'
+  added_preview    TEXT,          -- خلاصه‌ای از محتوای جدید اضافه‌شده (یا آدرس لینک/تصویر جدید)
+  added_chars      INTEGER,       -- حجم محتوای جدید (کاراکتر) — برای change_type='content'
   screenshot_path  TEXT           -- مسیر اسکرین‌شات در لحظه‌ی ثبت (ممکن است بعداً با تغییر جدید حذف شده باشد)
 );
+
+ALTER TABLE change_logs ADD COLUMN IF NOT EXISTS change_type TEXT NOT NULL DEFAULT 'content';
 
 CREATE INDEX IF NOT EXISTS idx_change_logs_link ON change_logs(link_id);
 CREATE INDEX IF NOT EXISTS idx_change_logs_detected_at ON change_logs(detected_at DESC);
