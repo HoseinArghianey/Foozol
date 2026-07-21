@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS change_logs (
 );
 
 ALTER TABLE change_logs ADD COLUMN IF NOT EXISTS change_type TEXT NOT NULL DEFAULT 'content';
+ALTER TABLE change_logs ADD COLUMN IF NOT EXISTS ai_summary TEXT; 
+ALTER TABLE change_logs ADD COLUMN IF NOT EXISTS is_promotional BOOLEAN NOT NULL DEFAULT false;
 
 CREATE INDEX IF NOT EXISTS idx_change_logs_link ON change_logs(link_id);
 CREATE INDEX IF NOT EXISTS idx_change_logs_detected_at ON change_logs(detected_at DESC);
