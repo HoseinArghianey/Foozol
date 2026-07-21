@@ -3,15 +3,15 @@ const pLimit = require('p-limit');
 const pool = require('../db/pool');
 const config = require('../config');
 const { checkLink } = require('./linkService');
-const { launchBrowser } = require('./browserLauncher');
 const logger = require('../utils/logger');
 
 let isRunning = false;
 
 /**
- * تمام لینک‌های فعال را بررسی می‌کند. یک مرورگر مشترک برای کل چرخه باز نگه داشته
- * می‌شود (برای کارایی بهتر) و همزمانی با p-limit محدود می‌شود تا فشار زیادی
- * به CPU/RAM سرور وارد نشود.
+ * تمام لینک‌های فعال را بررسی می‌کند. چون بررسی دیگر مبتنی بر یک درخواست HTTP
+ * سبک است (نه Puppeteer)، نیازی به مرورگر مشترک نیست و می‌توان با هم‌زمانی
+ * بسیار بالاتری (پیش‌فرض ۲۰) اجرا کرد — کافی است برای صدها/هزاران لینک در
+ * بازه‌ی کوتاهی (چند ثانیه تا چند دقیقه) چرخه کامل شود.
  */
 async function runCheckCycle() {
   if (isRunning) {
@@ -31,21 +31,15 @@ async function runCheckCycle() {
 
     logger.info(`شروع چرخه بررسی برای ${links.length} لینک...`);
 
-    const browser = await launchBrowser();
-
     const limit = pLimit(config.checkConcurrency);
-    const results = await Promise.all(
-      links.map((link) => limit(() => checkLink(browser, link)))
-    );
-
-    await browser.close();
+    const results = await Promise.all(links.map((link) => limit(() => checkLink(link))));
 
     const changedCount = results.filter((r) => r.changed).length;
     const errorCount = results.filter((r) => r.error).length;
     const durationSec = ((Date.now() - startedAt) / 1000).toFixed(1);
 
     logger.info(
-      `پایان چرخه بررسی در ${durationSec} ثانیه — ${changedCount} تغییر محتوایی، ${errorCount} خطا از ${links.length} لینک.`
+      `پایان چرخه بررسی در ${durationSec} ثانیه — ${changedCount} تغییر، ${errorCount} خطا از ${links.length} لینک.`
     );
   } catch (err) {
     logger.error('خطا در اجرای چرخه بررسی:', err.message);
