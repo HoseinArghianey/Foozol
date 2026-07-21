@@ -4,30 +4,15 @@ const config = require('../config');
 const { fetchPageHtml, extractMainContent, extractLinksAndImages } = require('./scraperService');
 const { findMeaningfulAdditions } = require('./diffService');
 const { createNotification } = require('./notificationService');
+const { summarizeLinkChange } = require('./aiSummaryService');
 const logger = require('../utils/logger');
 
 function hashText(text) {
   return crypto.createHash('sha256').update(text || '').digest('hex');
 }
 
-// حداکثر تعداد لینک/تصویر جدیدی که در یک بررسی گزارش می‌شود (برای جلوگیری از
-// سیل اعلان در اولین باری که یک لینک ثبت می‌شود یا صفحه کاملاً بازطراحی شده)
 const MAX_REPORTED_NEW_ITEMS = 5;
 
-/**
- * یک لینک را بررسی می‌کند: صفحه را با یک درخواست HTTP سبک (بدون مرورگر) می‌گیرد،
- * محتوای اصلی/لینک‌ها/تصاویر را استخراج می‌کند و با نسخه‌ی قبلی مقایسه می‌کند.
- * سه نوع تغییر مستقل تشخیص داده می‌شود:
- *   - content:   محتوای متنیِ معنادار جدید (نه تبلیغ/تعامل)
- *   - new_link:  صفحه/لینک داخلی جدیدی که قبلاً دیده نشده بود
- *   - new_image: تصویر/بنر جدیدی که قبلاً دیده نشده بود
- *
- * توجه: این تابع دیگر اسکرین‌شات نمی‌گیرد — اسکرین‌شات فقط با درخواست صریح
- * کاربر (endpoint جدا، با Puppeteer) گرفته می‌شود، تا مصرف منابع مستقل از
- * تعداد لینک‌ها بماند.
- *
- * @param {object} link - رکورد لینک از دیتابیس
- */
 async function checkLink(link) {
   const {
     id,
@@ -46,7 +31,12 @@ async function checkLink(link) {
   try {
     const html = await fetchPageHtml(url, config.scrapeTimeoutMs);
     const newText = extractMainContent(html, url);
-    const { links: newLinksArr, images: newImagesArr } = extractLinksAndImages(html, url);
+    const {
+      links: newLinksArr,
+      images: newImagesArr,
+      linkContext,
+      imageContext,
+    } = extractLinksAndImages(html, url);
     const newHash = hashText(newText);
 
     if (!newText && newLinksArr.length === 0) {
@@ -55,11 +45,9 @@ async function checkLink(link) {
       return { changed: false, warning: 'empty_content' };
     }
 
-    // --- تشخیص لینک/تصویر جدید (مستقل از diff متنی) ---
     const newlyAddedLinks = isFirstCheck ? [] : newLinksArr.filter((l) => !prevLinks.has(l));
     const newlyAddedImages = isFirstCheck ? [] : newImagesArr.filter((im) => !prevImages.has(im));
 
-    // --- تشخیص تغییر محتوای متنی معنادار (نه نویز تبلیغاتی) ---
     let isMeaningfulContent = false;
     let contentPreview = '';
     let totalChars = 0;
@@ -74,8 +62,6 @@ async function checkLink(link) {
     const hasNewImages = newlyAddedImages.length > 0;
     const anyChange = isMeaningfulContent || hasNewLinks || hasNewImages;
 
-    // baseline همیشه به‌روزرسانی می‌شود (چه تغییر معنادار بود چه نبود)، تا در
-    // بررسی بعدی همین وضعیت به‌عنوان نقطه‌ی مرجع جدید در نظر گرفته شود
     await pool.query(
       `UPDATE links
        SET content_hash = $1,
@@ -93,49 +79,77 @@ async function checkLink(link) {
       return { changed: false };
     }
 
+    const shownLinks = newlyAddedLinks.slice(0, MAX_REPORTED_NEW_ITEMS);
+    const shownImages = newlyAddedImages.slice(0, MAX_REPORTED_NEW_ITEMS);
+
+    const aiResult = await summarizeLinkChange({
+      linkTitle: title,
+      url,
+      contentChanged: isMeaningfulContent,
+      before: prevText,
+      after: newText,
+      newLinks: shownLinks,
+      newImages: shownImages,
+      linkContext,
+      imageContext,
+    });
+    const aiItemByUrl = new Map((aiResult?.items || []).map((it) => [it.url, it]));
+
     const changeEntries = [];
 
     if (isMeaningfulContent) {
-      changeEntries.push({ type: 'content', preview: contentPreview, chars: totalChars });
+      changeEntries.push({
+        type: 'content',
+        preview: contentPreview,
+        chars: totalChars,
+        aiSummary: aiResult?.contentSummary || null,
+        isPromotional: Boolean(aiResult?.contentIsPromotional),
+      });
     }
-    if (hasNewLinks) {
-      const shown = newlyAddedLinks.slice(0, MAX_REPORTED_NEW_ITEMS);
+    shownLinks.forEach((itemUrl) => {
+      const aiItem = aiItemByUrl.get(itemUrl);
       changeEntries.push({
         type: 'new_link',
-        preview: shown.join('، '),
-        chars: newlyAddedLinks.length,
+        preview: itemUrl,
+        chars: null,
+        aiSummary: aiItem?.summary || null,
+        isPromotional: Boolean(aiItem?.isPromotional),
       });
-    }
-    if (hasNewImages) {
-      const shown = newlyAddedImages.slice(0, MAX_REPORTED_NEW_ITEMS);
+    });
+    shownImages.forEach((itemUrl) => {
+      const aiItem = aiItemByUrl.get(itemUrl);
       changeEntries.push({
         type: 'new_image',
-        preview: shown.join('، '),
-        chars: newlyAddedImages.length,
+        preview: itemUrl,
+        chars: null,
+        aiSummary: aiItem?.summary || null,
+        isPromotional: Boolean(aiItem?.isPromotional),
       });
-    }
+    });
 
     for (const entry of changeEntries) {
       await pool.query(
-        `INSERT INTO change_logs (link_id, change_type, added_preview, added_chars)
-         VALUES ($1, $2, $3, $4)`,
-        [id, entry.type, entry.preview, entry.chars]
+        `INSERT INTO change_logs (link_id, change_type, added_preview, added_chars, ai_summary, is_promotional)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [id, entry.type, entry.preview, entry.chars, entry.aiSummary, entry.isPromotional]
       );
     }
 
-    const messages = {
+    const defaultMessages = {
       content: `محتوای جدید در «${title}» شناسایی شد`,
       new_link: `صفحه/لینک جدید در «${title}» شناسایی شد`,
       new_image: `تصویر/بنر جدید در «${title}» شناسایی شد`,
     };
+    const typesSeen = new Set();
     for (const entry of changeEntries) {
-      await createNotification(id, messages[entry.type]);
+      if (typesSeen.has(entry.type)) continue;
+      typesSeen.add(entry.type);
+      const message = entry.aiSummary || defaultMessages[entry.type];
+      await createNotification(id, message);
     }
 
-    logger.info(
-      `✓ تغییر شناسایی شد: ${url} (${changeEntries.map((e) => e.type).join(', ')})`
-    );
-    return { changed: true, types: changeEntries.map((e) => e.type) };
+    logger.info(`✓ تغییر شناسایی شد: ${url} (${[...typesSeen].join(', ')})`);
+    return { changed: true, types: [...typesSeen] };
   } catch (err) {
     logger.error(`خطا در بررسی ${url}: ${err.message}`);
     await pool
