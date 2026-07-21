@@ -24,6 +24,11 @@ module.exports = {
 
   // فعال/غیرفعال بودن زمان‌بند داخلی node-cron (روی هاست رایگانی که می‌خوابد، بهتر است خاموش باشد
   // و به‌جایش از /api/cron/run-check با یک سرویس cron خارجی رایگان استفاده کنید)
-  enableInternalScheduler: process.env.ENABLE_INTERNAL_SCHEDULER !== 'false',
+enableInternalScheduler: process.env.ENABLE_INTERNAL_SCHEDULER !== 'false',
   cronSecret: process.env.CRON_SECRET || '',
+
+  // خلاصه‌سازی تغییرات با هوش‌مصنوعی (Mistral AI). اگر MISTRAL_API_KEY خالی باشد،
+  // این ویژگی به‌طور خودکار غیرفعال می‌ماند (بدون کرش کردن سیستم).
+  mistralApiKey: process.env.MISTRAL_API_KEY || '',
+  mistralModel: process.env.MISTRAL_MODEL || 'mistral-small-latest',
 };
