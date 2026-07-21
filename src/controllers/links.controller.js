@@ -27,6 +27,8 @@ function toDomain(url) {
   }
 }
 
+// شکل خروجی دقیقاً منطبق با چیزی است که فرانت‌اند فعلی (آرایه‌ی links) انتظار دارد
+// + چند فیلد اضافه‌ی مفید (id، url کامل، آدرس اسکرین‌شات) برای تعامل کامل با بک‌اند.
 function serialize(row) {
   return {
     id: row.id,
@@ -37,17 +39,36 @@ function serialize(row) {
     status: row.status,
     time: timeAgoFa(row.last_checked_at),
     changed: Number(row.unread_count) > 0,
+    // اسکرین‌شات دیگر خودکار گرفته نمی‌شود؛ اگر تا الان درخواست نشده باشد null است
+    // و فرانت باید دکمه‌ی «درخواست اسکرین‌شات» نشان دهد (endpoint زیر را صدا بزند)
     screenshotUrl: screenshotPublicUrl(row.current_screenshot_path),
     lastCheckedAt: row.last_checked_at,
     lastChangedAt: row.last_changed_at,
     createdAt: row.created_at,
+    // آخرین تغییرِ ثبت‌شده (برای نمایش مستقیم روی کارت، بدون نیاز به درخواست جدا)
+    latestChangeType: row.latest_change_type || null,
+    latestSummary: row.latest_ai_summary || row.latest_added_preview || null,
+    latestIsPromotional: Boolean(row.latest_is_promotional),
+    latestChangeAt: row.latest_detected_at || null,
   };
 }
 
 const LIST_QUERY = `
   SELECT links.*,
-    (SELECT COUNT(*) FROM notifications n WHERE n.link_id = links.id AND n.is_read = false) AS unread_count
+    (SELECT COUNT(*) FROM notifications n WHERE n.link_id = links.id AND n.is_read = false) AS unread_count,
+    latest.change_type    AS latest_change_type,
+    latest.ai_summary     AS latest_ai_summary,
+    latest.added_preview  AS latest_added_preview,
+    latest.is_promotional AS latest_is_promotional,
+    latest.detected_at    AS latest_detected_at
   FROM links
+  LEFT JOIN LATERAL (
+    SELECT change_type, ai_summary, added_preview, is_promotional, detected_at
+    FROM change_logs
+    WHERE change_logs.link_id = links.id
+    ORDER BY detected_at DESC
+    LIMIT 1
+  ) latest ON true
 `;
 
 async function listLinks(req, res) {
@@ -86,6 +107,7 @@ async function createLink(req, res) {
     res.status(201).json(serialize({ ...rows[0], unread_count: 0 }));
   } catch (err) {
     if (err.code === '23505') {
+      // نقض قید UNIQUE روی url
       throw new ApiError(409, 'این لینک قبلاً ثبت شده است');
     }
     throw err;
@@ -127,6 +149,8 @@ async function deleteLink(req, res) {
   res.status(204).send();
 }
 
+// بررسی فوری و دستیِ یک لینک (بدون نیاز به منتظر ماندن برای چرخه‌ی زمان‌بندی‌شده)
+// این هم مثل چرخه‌ی خودکار، سبک و بدون مرورگر است.
 async function checkLinkNow(req, res) {
   const { id } = req.params;
   const { rows } = await pool.query('SELECT * FROM links WHERE id = $1', [id]);
@@ -139,6 +163,8 @@ async function checkLinkNow(req, res) {
 }
 
 // اسکرین‌شات درخواستیِ کاربر (on-demand): تنها جایی که Puppeteer صدا زده می‌شود.
+// چون فقط با کلیک واقعی کاربر اجرا می‌شود (نه برای هر لینک در هر چرخه)، مصرف
+// منابع مستقل از تعداد کل لینک‌های سیستم می‌ماند.
 async function requestScreenshot(req, res) {
   const { id } = req.params;
   const { rows } = await pool.query('SELECT * FROM links WHERE id = $1', [id]);
@@ -173,13 +199,14 @@ async function requestScreenshot(req, res) {
   }
 }
 
+// تاریخچه‌ی تغییرات یک لینک خاص
 async function getLinkHistory(req, res) {
   const { id } = req.params;
   const { rows } = await pool.query(
     `SELECT * FROM change_logs WHERE link_id = $1 ORDER BY detected_at DESC LIMIT 100`,
     [id]
   );
-res.json(
+  res.json(
     rows.map((r) => ({
       id: r.id,
       detectedAt: r.detected_at,
@@ -193,6 +220,7 @@ res.json(
   );
 }
 
+// علامت‌گذاری اعلان‌های یک لینک به‌عنوان دیده‌شده (خاموش کردن بج «تغییر جدید»)
 async function dismissLinkChanges(req, res) {
   const { id } = req.params;
   await pool.query('UPDATE notifications SET is_read = true WHERE link_id = $1', [id]);
