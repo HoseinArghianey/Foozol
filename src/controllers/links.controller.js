@@ -179,7 +179,7 @@ async function getLinkHistory(req, res) {
     `SELECT * FROM change_logs WHERE link_id = $1 ORDER BY detected_at DESC LIMIT 100`,
     [id]
   );
-  res.json(
+res.json(
     rows.map((r) => ({
       id: r.id,
       detectedAt: r.detected_at,
@@ -187,6 +187,8 @@ async function getLinkHistory(req, res) {
       changeType: r.change_type,
       addedPreview: r.added_preview,
       addedChars: r.added_chars,
+      aiSummary: r.ai_summary,
+      isPromotional: r.is_promotional,
     }))
   );
 }
