@@ -10,9 +10,9 @@ module.exports = {
   publicBaseUrl: process.env.PUBLIC_BASE_URL || 'http://localhost:4000',
   corsOrigins: (process.env.CORS_ORIGIN || '*').split(',').map(s => s.trim()),
   checkCron: process.env.CHECK_CRON || '*/12 * * * *', // هر ۱۲ دقیقه
-  scrapeTimeoutMs: parseInt(process.env.SCRAPE_TIMEOUT_MS, 10) || 30000,
+  scrapeTimeoutMs: parseInt(process.env.SCRAPE_TIMEOUT_MS, 10) || 15000,
   minAddedChars: parseInt(process.env.MIN_ADDED_CHARS, 10) || 40,
-  checkConcurrency: parseInt(process.env.CHECK_CONCURRENCY, 10) || 3,
+  checkConcurrency: parseInt(process.env.CHECK_CONCURRENCY, 10) || 20,
   uploadsDir,
   screenshotsDir,
 
