@@ -11,6 +11,7 @@ router.patch('/:id', asyncHandler(controller.updateLink));
 router.delete('/:id', asyncHandler(controller.deleteLink));
 
 router.post('/:id/check', asyncHandler(controller.checkLinkNow));
+router.post('/:id/screenshot', asyncHandler(controller.requestScreenshot));
 router.get('/:id/history', asyncHandler(controller.getLinkHistory));
 router.post('/:id/dismiss', asyncHandler(controller.dismissLinkChanges));
 
