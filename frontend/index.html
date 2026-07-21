@@ -99,24 +99,31 @@
   .grid{
     display:grid;
     grid-template-columns:1fr;
-    gap:18px;
+    gap:34px;
   }
-  @media (min-width:760px){
+  @media (min-width:700px){
     .grid{grid-template-columns:1fr 1fr;}
   }
+  @media (min-width:1040px){
+    .grid{grid-template-columns:1fr 1fr 1fr;}
+  }
+  /* .card = پوسته‌ی بیرونی، overflow باز تا دو دکمه‌ی گوشه بتوانند از لبه‌ی
+     کارت بیرون بزنند (دقیقاً مثل نمونه‌ای که کاربر خواسته)؛ .card-inner همان
+     مستطیل تیره‌ی گردشده‌ای‌ست که overflow آن بسته است (برای گرد بودن گوشه‌های عکس) */
   .card{
     position:relative;
+    cursor:pointer;
+    transition:transform .25s ease;
+  }
+  .card:hover{transform:translateY(-6px);}
+  .card:hover .card-inner{box-shadow:0 26px 48px -16px rgba(0,0,0,.55), 0 8px 20px rgba(0,0,0,.3);}
+  .card-inner{
     display:flex; flex-direction:column;
     background:var(--card-bg);
-    border-radius:0;
+    border-radius:20px;
     overflow:hidden;
     box-shadow:0 10px 30px -14px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.25);
-    transition:transform .25s ease, box-shadow .25s ease;
-    cursor:pointer;
-  }
-  .card:hover{
-    transform:translateY(-5px);
-    box-shadow:0 24px 46px -16px rgba(0,0,0,.55), 0 8px 20px rgba(0,0,0,.3);
+    transition:box-shadow .25s ease;
   }
   .deco-icons{
     position:absolute; top:14px; left:16px; z-index:3;
@@ -127,24 +134,17 @@
     width:14px; height:14px; border:1.5px solid rgba(255,255,255,.55);
     transform:rotate(45deg); border-radius:2px;
   }
-  @media (min-width:640px){
-    .card{flex-direction:row; min-height:188px;}
-  }
+  /* --- بخش بالا: عکس (اسکرین‌شات واقعی در صورت وجود، وگرنه هنر تولیدی) --- */
   .card-cover{
     position:relative; flex:0 0 auto;
-    width:calc(100% - 24px); height:140px;
-    margin:12px;
+    width:100%; height:168px;
   }
-  @media (min-width:640px){
-    .card-cover{width:calc(34% - 24px); height:auto; margin:12px;}
+  .card-cover img{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; display:block;
   }
-  .cover-inner{
-    position:absolute; inset:0;
-    border-radius:16px; overflow:hidden;
-    box-shadow:0 10px 22px -8px rgba(10,5,30,.55), 0 2px 6px rgba(10,5,30,.3);
-  }
-  .cover-inner svg{
-    position:absolute; inset:0; width:100%; height:100%; display:block; border-radius:16px;
+  .card-cover svg{
+    position:absolute; inset:0; width:100%; height:100%; display:block;
     animation:breathe 4.5s ease-in-out infinite;
     transform-origin:center;
   }
@@ -152,26 +152,6 @@
     0%,100%{transform:scale(1);}
     50%{transform:scale(1.07);}
   }
-  .card-cover::after{
-    content:'';
-    position:absolute; inset:-5px;
-    border-radius:20px;
-    padding:3px;
-    background:conic-gradient(from var(--spin-angle,0deg),
-      transparent 0deg, transparent 322deg,
-      rgba(30,90,255,.18) 336deg,
-      #2F6BFF 348deg,
-      #0A3FFF 355deg,
-      transparent 360deg);
-    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite:xor;
-    mask-composite:exclude;
-    animation:spinGlow 6s linear infinite;
-    pointer-events:none;
-    z-index:1;
-    filter:drop-shadow(0 0 6px rgba(20,80,255,.6));
-  }
-  @keyframes spinGlow{ to{ --spin-angle:360deg; } }
   .cover-badge{
     position:absolute; top:12px; inset-inline-start:12px; z-index:2;
     backdrop-filter:blur(6px);
@@ -182,26 +162,68 @@
   .cover-badge .dot{width:6px; height:6px; border-radius:50%; background:var(--success); animation:pulse 1.8s ease-in-out infinite;}
   .cover-badge.idle{background:rgba(255,255,255,.09);}
   .cover-badge.idle .dot{background:rgba(255,255,255,.45); animation:none;}
+  /* --- بخش وسط: عنوان + خلاصه‌ی تغییر تولیدشده با هوش‌مصنوعی (میسترال) --- */
   .card-body{
-    flex:1; padding:20px 22px;
-    display:flex; flex-direction:column; justify-content:space-between; gap:12px;
+    flex:1; padding:18px 20px 14px;
+    display:flex; flex-direction:column; gap:8px;
     color:#F3F1FA;
   }
-  .card-title{font-size:18px; font-weight:600; line-height:1.4; color:#fff;}
+  .card-title{font-size:16.5px; font-weight:600; line-height:1.4; color:#fff;}
   .card-domain{
-    font-family:var(--font-mono); font-size:11.5px; color:#B6AFDD;
+    font-family:var(--font-mono); font-size:11px; color:#B6AFDD;
     direction:ltr; text-align:right; unicode-bidi:plaintext;
   }
-  .card-foot{display:flex; align-items:center; justify-content:space-between; margin-top:2px;}
-  .card-time{font-size:11.5px; color:#B6AFDD;}
-  .more-btn{
-    display:inline-flex; align-items:center; gap:6px;
-    background:rgba(255,255,255,.06); color:#fff; border:1.5px solid rgba(239,30,99,.55);
-    padding:6px 6px 6px 14px; border-radius:999px; font-size:12.5px; font-family:var(--font-sans);
+  .card-summary{
+    font-size:12.5px; line-height:1.8; color:var(--text-secondary);
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
   }
-  .more-btn .arrow-circle{
-    width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff;
-    display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;
+  .card-summary.promo{color:var(--text-muted);}
+  .card-summary.promo::before{
+    content:'تبلیغاتی · '; color:var(--accent-text); font-weight:600;
+  }
+  .card-summary.empty{color:var(--text-muted); font-style:normal;}
+  /* --- بخش پایین: لوگوی سایت + زمان آخرین بررسی، وسط‌چین --- */
+  .card-footer{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:6px 20px 30px;
+    border-top:1px solid var(--border);
+    margin-top:2px; padding-top:12px;
+  }
+  .site-favicon{
+    width:18px; height:18px; border-radius:5px; flex-shrink:0;
+    background:rgba(255,255,255,.08); object-fit:cover;
+  }
+  .card-time{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:11.5px; color:#B6AFDD;
+  }
+  .card-time i{font-size:13px;}
+  /* --- دو دکمه‌ی «تب» که از گوشه‌های پایین کارت بیرون می‌زنند --- */
+  .card-tab{
+    position:absolute; bottom:-16px; z-index:5;
+    display:inline-flex; align-items:center; gap:7px;
+    background:#fff; color:#181D3E;
+    border-radius:999px; font-size:12px; font-weight:600;
+    box-shadow:0 12px 26px -10px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.25);
+    transition:transform .15s ease;
+  }
+  .card:hover .card-tab{transform:translateY(-2px);}
+  .card-tab-changes{
+    right:18px; padding:7px 14px 7px 7px;
+  }
+  .card-tab-changes .tab-dot{
+    width:22px; height:22px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--accent); color:#fff; font-size:11px;
+  }
+  .card-tab-changes.idle .tab-dot{background:var(--border-strong); color:#C9CCE4;}
+  .card-tab-more{
+    left:18px; padding:7px 7px 7px 14px;
+  }
+  .card-tab-more .tab-arrow{
+    width:22px; height:22px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--accent); color:#fff; font-size:13px;
   }
   @keyframes pulse{
     0%,100%{opacity:1; box-shadow:0 0 0 0 rgba(61,220,132,.35);}
@@ -511,6 +533,20 @@ function coverArt(cat, idx){
     '</svg>';
 }
 
+// آدرس لوگوی کوچک (favicon) سایتِ رصدشده — از سرویس عمومی گوگل استفاده می‌شود
+// تا نیازی به ذخیره/آپلود لوگو نباشد.
+function faviconUrl(domain){
+  return 'https://www.google.com/s2/favicons?sz=64&domain=' + encodeURIComponent(domain);
+}
+
+// جلوگیری از شکستن HTML وقتی عنوان/خلاصه شامل کاراکترهای خاص باشد
+function escapeHtml(str){
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+const CHANGE_TYPE_LABEL = { content: 'تغییر محتوا', new_link: 'لینک جدید', new_image: 'تصویر جدید' };
+
 function renderGrid(){
   const grid = document.getElementById('grid');
   const empty = document.getElementById('empty');
@@ -520,22 +556,45 @@ function renderGrid(){
   filtered.forEach((l, idx) => {
     const card = document.createElement('div');
     card.className = 'card';
-    const badge = l.changed
-      ? '<span class="cover-badge"><span class="dot"></span>تغییر جدید</span>'
-      : '<span class="cover-badge idle">بدون تغییر</span>';
+
+    // --- بخش بالا: عکس (اسکرین‌شات واقعی اگر درخواست شده باشد، وگرنه هنر تولیدی) ---
+    const cover = l.screenshotUrl
+      ? '<img src="' + l.screenshotUrl + '" alt="اسکرین‌شات ' + escapeHtml(l.title) + '">'
+      : coverArt(l.cat, idx);
+
+    // --- بخش وسط: عنوان + خلاصه‌ی هوش‌مصنوعی (میسترال) از آخرین تغییر ---
+    let summaryHtml;
+    if (l.latestSummary) {
+      const cls = 'card-summary' + (l.latestIsPromotional ? ' promo' : '');
+      summaryHtml = '<div class="' + cls + '">' + escapeHtml(l.latestSummary) + '</div>';
+    } else {
+      summaryHtml = '<div class="card-summary empty">هنوز تغییری برای این لینک ثبت نشده است.</div>';
+    }
+
+    // --- تب گوشه‌ی «تغییرات»: خلاصه‌ی وضعیت + نوع آخرین تغییر ---
+    const changeLabel = l.changed
+      ? (CHANGE_TYPE_LABEL[l.latestChangeType] || 'تغییر جدید')
+      : 'بدون تغییر';
+    const tabChangesCls = 'card-tab card-tab-changes' + (l.changed ? '' : ' idle');
+    const tabChangesIcon = l.changed ? 'ti-bell-ringing' : 'ti-check';
+
     card.innerHTML =
-      '<div class="card-cover"><div class="cover-inner">' + badge + coverArt(l.cat, idx) + '</div></div>' +
-      decoCluster() +
-      '<div class="card-body">' +
-        '<div>' +
-          '<div class="card-domain">' + l.domain + '</div>' +
-          '<div class="card-title">' + l.title + '</div>' +
+      '<div class="card-inner">' +
+        '<div class="card-cover">' + cover + '</div>' +
+        decoCluster() +
+        '<div class="card-body">' +
+          '<div class="card-domain">' + escapeHtml(l.domain) + '</div>' +
+          '<div class="card-title">' + escapeHtml(l.title) + '</div>' +
+          summaryHtml +
         '</div>' +
-        '<div class="card-foot">' +
-          '<span class="card-time">' + l.time + '</span>' +
-          '<span class="more-btn">بیشتر<span class="arrow-circle"><i class="ti ti-chevron-left"></i></span></span>' +
+        '<div class="card-footer">' +
+          '<img class="site-favicon" src="' + faviconUrl(l.domain) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
+          '<span class="card-time"><i class="ti ti-clock" aria-hidden="true"></i>' + l.time + '</span>' +
         '</div>' +
-      '</div>';
+      '</div>' +
+      '<span class="' + tabChangesCls + '"><span class="tab-dot"><i class="ti ' + tabChangesIcon + '" aria-hidden="true"></i></span>' + changeLabel + '</span>' +
+      '<span class="card-tab card-tab-more">بیشتر<span class="tab-arrow"><i class="ti ti-chevron-left" aria-hidden="true"></i></span></span>';
+
     const cardDelay = idx * 90;
     card.style.animationDelay = cardDelay + 'ms';
     card.querySelector('.card-cover').style.animationDelay = (cardDelay + 320) + 'ms';
