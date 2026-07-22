@@ -15,10 +15,41 @@
     initial-value:0deg;
   }
   :root{
+    --bg:#F3F5FB;
+    --bg-grad-a:#F3F5FB;
+    --bg-grad-b:#F3F5FB;
+    --bg-grad-c:#EEF1FA;
+    --surface:#FFFFFF;
+    --surface-2:#F6F7FC;
+    --card-bg:#FFFFFF;
+    --border:#E7E9F3;
+    --border-strong:#D7DAEA;
+    --text-primary:#1C2237;
+    --text-secondary:#67708F;
+    --text-muted:#9BA1BC;
+    --accent:#EF1E63;
+    --accent-strong:#C91652;
+    --accent-bg:rgba(239,30,99,.10);
+    --accent-text:#D31459;
+    --success:#17C666;
+    --success-bg:rgba(23,198,102,.12);
+    --coral:#EF1E63;
+    --coral-bg:rgba(239,30,99,.10);
+    --coral-text:#D31459;
+    --radius:10px;
+    --font-sans:'Vazirmatn', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+    /* رنگ‌های مخصوص پنل شناور (فب) — عمداً همیشه تیره می‌مانند، مستقل از تم
+       روشن صفحه، دقیقاً مثل پس‌زمینه‌ی تیره‌ی سایت مرجع (عنکبوت) */
+    --fab-panel-bg:#181D3E;
+    --fab-panel-border:#2C3260;
+    --fab-text:#F4F5FA;
+    --fab-text-muted:#9FA5C7;
+  }
+  /* تم تیره — با دکمه‌ی «تم شب و روز» فعال می‌شود (data-theme روی <html>) */
+  html[data-theme="dark"]{
     --bg:#10142B;
-    --bg-grad-a:#10142B;
-    --bg-grad-b:#10142B;
-    --bg-grad-c:#131834;
+    --bg-grad-a:#10142B; --bg-grad-b:#10142B; --bg-grad-c:#131834;
     --surface:#181D3E;
     --surface-2:#1F244A;
     --card-bg:#232A57;
@@ -27,18 +58,12 @@
     --text-primary:#F4F5FA;
     --text-secondary:#9FA5C7;
     --text-muted:#6E7396;
-    --accent:#EF1E63;
-    --accent-strong:#C91652;
     --accent-bg:rgba(239,30,99,.16);
     --accent-text:#FF6D9C;
     --success:#3DDC84;
     --success-bg:rgba(61,220,132,.16);
-    --coral:#EF1E63;
     --coral-bg:rgba(239,30,99,.16);
     --coral-text:#FF6D9C;
-    --radius:10px;
-    --font-sans:'Vazirmatn', sans-serif;
-    --font-mono:'JetBrains Mono', monospace;
   }
   *{box-sizing:border-box;}
   html,body{margin:0; padding:0;}
@@ -47,38 +72,30 @@
     background:var(--bg);
     color:var(--text-primary);
     min-height:100vh;
+    transition:background-color .25s ease, color .25s ease;
   }
   button{font-family:var(--font-sans); cursor:pointer;}
   .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);}
 
-  .topbar{
-    position:sticky; top:0; z-index:20;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:14px 20px;
-    background:rgba(16,20,43,0.65);
-    backdrop-filter:blur(10px);
-    border-bottom:1px solid var(--border);
-  }
-  .brand{display:flex; align-items:center; gap:10px;}
-  .brand-mark{
-    width:32px; height:32px; border-radius:9px;
-    background:var(--accent-bg);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .brand-mark i{font-size:18px; color:var(--accent-text);}
-  .brand span{font-weight:600; font-size:17px;}
-
   .icon-btn{
-    width:38px; height:38px; border-radius:9px;
+    position:relative;
+    width:38px; height:38px; border-radius:11px;
     border:1px solid var(--border);
-    background:rgba(255,255,255,.04);
+    background:var(--surface-2);
     display:flex; align-items:center; justify-content:center;
-    transition:border-color .15s, background .15s;
+    transition:border-color .15s, background .15s, transform .15s;
   }
-  .icon-btn:hover{border-color:var(--border-strong); background:rgba(255,255,255,.08);}
-  .icon-btn i{font-size:18px; color:var(--text-primary);}
+  .icon-btn:hover{border-color:var(--border-strong); background:#EEF0F9; transform:translateY(-1px);}
+  .icon-btn i, .icon-btn svg{font-size:18px; color:var(--text-secondary);}
+  .icon-btn .badge{
+    position:absolute; top:-5px; inset-inline-start:-5px;
+    min-width:17px; height:17px; padding:0 4px; border-radius:999px;
+    background:var(--accent); color:#fff; font-size:10px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    border:2px solid #fff;
+  }
 
-  main{max-width:960px; margin:0 auto; padding:20px;}
+  main{max-width:960px; margin:0 auto; padding:28px 20px 130px;}
 
   .toolbar{
     display:flex; align-items:center; gap:10px; flex-wrap:wrap;
@@ -152,25 +169,15 @@
     0%,100%{transform:scale(1);}
     50%{transform:scale(1.07);}
   }
-  .cover-badge{
-    position:absolute; top:12px; inset-inline-start:12px; z-index:2;
-    backdrop-filter:blur(6px);
-    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.2);
-    color:#fff; font-size:11px; padding:5px 10px; border-radius:999px;
-    display:flex; align-items:center; gap:5px;
-  }
-  .cover-badge .dot{width:6px; height:6px; border-radius:50%; background:var(--success); animation:pulse 1.8s ease-in-out infinite;}
-  .cover-badge.idle{background:rgba(255,255,255,.09);}
-  .cover-badge.idle .dot{background:rgba(255,255,255,.45); animation:none;}
   /* --- بخش وسط: عنوان + خلاصه‌ی تغییر تولیدشده با هوش‌مصنوعی (میسترال) --- */
   .card-body{
     flex:1; padding:18px 20px 14px;
     display:flex; flex-direction:column; gap:8px;
-    color:#F3F1FA;
+    color:var(--text-primary);
   }
-  .card-title{font-size:16.5px; font-weight:600; line-height:1.4; color:#fff;}
+  .card-title{font-size:16.5px; font-weight:600; line-height:1.4; color:var(--text-primary);}
   .card-domain{
-    font-family:var(--font-mono); font-size:11px; color:#B6AFDD;
+    font-family:var(--font-mono); font-size:11px; color:var(--text-muted);
     direction:ltr; text-align:right; unicode-bidi:plaintext;
   }
   .card-summary{
@@ -191,20 +198,20 @@
   }
   .site-favicon{
     width:18px; height:18px; border-radius:5px; flex-shrink:0;
-    background:rgba(255,255,255,.08); object-fit:cover;
+    background:var(--surface-2); object-fit:cover;
   }
   .card-time{
     display:inline-flex; align-items:center; gap:5px;
-    font-size:11.5px; color:#B6AFDD;
+    font-size:11.5px; color:var(--text-secondary);
   }
   .card-time svg{flex-shrink:0; opacity:.85;}
-  /* --- دو دکمه‌ی «تب» که از گوشه‌های پایین کارت بیرون می‌زنند --- */
+  /* --- دو دکمه‌ی «تب» که از گوشه‌های پایین کارت بیرون می‌زنند (سبک عنکبوت) --- */
   .card-tab{
     position:absolute; bottom:-16px; z-index:5;
     display:inline-flex; align-items:center; gap:7px;
-    background:#fff; color:#181D3E;
+    background:var(--accent); color:#fff;
     border-radius:999px; font-size:12px; font-weight:600;
-    box-shadow:0 12px 26px -10px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.25);
+    box-shadow:0 12px 24px -10px rgba(239,30,99,.55), 0 2px 8px rgba(20,20,40,.12);
     transition:transform .15s ease;
   }
   .card:hover .card-tab{transform:translateY(-2px);}
@@ -214,20 +221,21 @@
   .card-tab-changes .tab-dot{
     width:22px; height:22px; border-radius:50%; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
-    background:var(--accent); color:#fff; font-size:11px;
+    background:#fff; color:var(--accent); font-size:11px;
   }
-  .card-tab-changes.idle .tab-dot{background:var(--border-strong); color:#C9CCE4;}
+  .card-tab.idle{background:#EEF0F9; color:var(--text-secondary); box-shadow:0 8px 18px -10px rgba(20,20,40,.2);}
+  .card-tab-changes.idle .tab-dot{background:#fff; color:var(--text-muted);}
   .card-tab-more{
     left:18px; padding:7px 7px 7px 14px;
   }
   .card-tab-more .tab-arrow{
     width:22px; height:22px; border-radius:50%; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
-    background:var(--accent); color:#fff; font-size:13px;
+    background:#fff; color:var(--accent); font-size:13px;
   }
   @keyframes pulse{
-    0%,100%{opacity:1; box-shadow:0 0 0 0 rgba(61,220,132,.35);}
-    50%{opacity:.6; box-shadow:0 0 0 5px rgba(61,220,132,0);}
+    0%,100%{opacity:1; box-shadow:0 0 0 0 rgba(23,198,102,.35);}
+    50%{opacity:.6; box-shadow:0 0 0 5px rgba(23,198,102,0);}
   }
 
   .empty{
@@ -235,38 +243,72 @@
   }
   .empty i{font-size:28px; color:var(--text-muted); margin-bottom:10px; display:block;}
 
-  .overlay{
-    position:fixed; inset:0; background:rgba(20,22,18,.45);
-    display:none; z-index:30;
+  /* ================= منوی شناور (سبک عنکبوت) =================
+     یک دکمه‌ی دایره‌ای صورتی ثابت در گوشه‌ی پایین-چپ که با کلیک باز می‌شود و
+     ستونی از دکمه‌های اکشن را بالای خودش نشان می‌دهد (به ترتیب طول متن، از
+     بلندترین به کوتاه‌ترین). دکمه‌ی «دسته‌بندی‌ها» به‌جای باز شدن در همان
+     ستون، چیپ‌های دسته‌بندی را به‌صورت کشویی به کنار (سمت راست) باز می‌کند.
+     پنل عمداً همیشه تیره است (مستقل از تم روشن صفحه)، دقیقاً مثل سایت مرجع. */
+  .fab-menu{
+    position:fixed; bottom:22px; left:22px; z-index:50;
+    display:flex; flex-direction:column; align-items:flex-start; gap:12px;
   }
-  .overlay.open{display:block;}
-  .drawer{
-    position:absolute; top:0; right:0; height:100%; width:270px;
-    background:var(--surface); border-left:1px solid var(--border);
-    padding:18px; display:flex; flex-direction:column;
-    transform:translateX(0); transition:transform .2s ease;
+  .fab-toggle{
+    width:56px; height:56px; border-radius:50%; border:none;
+    background:var(--accent); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 14px 30px -10px rgba(239,30,99,.6), 0 4px 12px rgba(20,20,40,.2);
+    transition:transform .2s ease, background .15s;
+    flex-shrink:0; position:relative;
   }
-  .drawer-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
-  .drawer-head span{font-weight:600; font-size:16px;}
-  .add-btn{
-    width:100%; border:none; background:var(--accent); color:#fff;
-    padding:11px; border-radius:var(--radius); font-size:14px; font-weight:500;
-    display:flex; align-items:center; justify-content:center; gap:7px;
-    margin-bottom:22px; transition:background .15s;
+  .fab-toggle:hover{transform:scale(1.05);}
+  .fab-toggle svg{transition:transform .25s ease;}
+  .fab-menu.open .fab-toggle svg{transform:rotate(135deg);}
+  .fab-panel{
+    display:flex; flex-direction:column-reverse; gap:8px; align-items:flex-start;
+    opacity:0; transform:translateY(14px) scale(.96); pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
   }
-  .add-btn:hover{background:var(--accent-strong);}
-  .section-label{font-size:12px; color:var(--text-muted); margin:0 0 8px;}
-  .nav-item{
-    display:flex; align-items:center; gap:10px; justify-content:space-between;
-    border:none; background:transparent; padding:9px 8px; border-radius:8px;
-    font-size:13.5px; color:var(--text-primary); text-align:right; width:100%;
+  .fab-menu.open .fab-panel{opacity:1; transform:translateY(0) scale(1); pointer-events:auto;}
+  /* دکمه‌های فقط‌آیکون (بدون متن) — عنوان هرکدام با aria-label/title مشخص است */
+  .fab-item{
+    width:46px; height:46px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--fab-panel-border); background:var(--fab-panel-bg);
+    color:var(--fab-text);
+    box-shadow:0 10px 22px -10px rgba(10,10,25,.5);
     transition:background .15s;
+    position:relative;
   }
-  .nav-item:hover{background:var(--surface-2);}
-  .nav-item .right{display:flex; align-items:center; gap:8px;}
-  .nav-item i{font-size:17px; color:var(--text-secondary);}
-  .nav-item .count{font-size:12px; color:var(--text-muted);}
-  .drawer-divider{border-top:1px solid var(--border); margin:16px 0;}
+  .fab-item:hover{background:#232A57;}
+  .fab-item.primary{background:var(--accent); border-color:transparent;}
+  .fab-item .fab-item-count{
+    position:absolute; top:-4px; inset-inline-end:-4px;
+    background:var(--accent); color:#fff; font-size:10px; font-weight:700;
+    min-width:17px; height:17px; padding:0 4px; border-radius:999px;
+    display:flex; align-items:center; justify-content:center;
+    border:2px solid var(--fab-panel-bg);
+  }
+  /* --- کشوی کناریِ دسته‌بندی‌ها: همیشه کنار دکمه‌ی اصلیِ منو (fab-toggle) باز
+     می‌شود، مستقل از این‌که دکمه‌ی «دسته‌بندی‌ها» کجای ستون قرار گرفته --- */
+  .fab-categories-flyout{
+    position:absolute; bottom:0; left:0;
+    transform:translateX(16px); opacity:0; pointer-events:none;
+    display:flex; align-items:center; gap:8px; flex-wrap:nowrap; overflow-x:auto;
+    background:var(--fab-panel-bg); border:1px solid var(--fab-panel-border);
+    padding:8px; border-radius:999px; max-width:min(70vw, 480px);
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  .fab-menu.categories-open .fab-categories-flyout{
+    left:calc(100% + 12px);
+    transform:translateX(0); opacity:1; pointer-events:auto;
+  }
+  .fab-chips{display:flex; align-items:center; gap:8px; flex-wrap:nowrap;}
+  .fab-chips .chip{border-color:rgba(255,255,255,.14); background:rgba(255,255,255,.05); color:var(--fab-text-muted); white-space:nowrap;}
+  .fab-chips .chip.active{background:var(--accent); color:#fff;}
+  @media (max-width:560px){
+    .fab-categories-flyout{max-width:min(80vw, 340px);}
+  }
 
   .modal-overlay{
     position:fixed; inset:0; background:rgba(20,22,18,.45);
@@ -296,8 +338,8 @@
   }
 
   @media (max-width:480px){
-    .drawer{width:82%;}
-    main{padding:14px;}
+    main{padding:14px 14px 120px;}
+    .fab-menu{bottom:16px; left:16px;}
   }
 
   @keyframes cardEnter{
@@ -316,18 +358,7 @@
 
 <h1 class="sr-only">رصدلینک — رصد تغییرات لینک‌ها، ثبت لینک، مشاهده نوتیفیکیشن‌ها و تاریخچه تغییرات</h1>
 
-<header class="topbar">
-  <div class="brand">
-    <div class="brand-mark"><i class="ti ti-radar-2" aria-hidden="true"></i></div>
-    <span>رصدلینک</span>
-  </div>
-  <button class="icon-btn" id="menuBtn" aria-label="باز کردن منو">
-    <i class="ti ti-menu-2" aria-hidden="true"></i>
-  </button>
-</header>
-
 <main>
-  <div class="toolbar" id="toolbar"></div>
   <div class="grid" id="grid"></div>
   <div class="empty" id="empty" style="display:none;">
     <i class="ti ti-category" aria-hidden="true"></i>
@@ -335,22 +366,43 @@
   </div>
 </main>
 
-<div class="overlay" id="overlay">
-  <div class="drawer">
-    <div class="drawer-head">
-      <span>منو</span>
-      <button class="icon-btn" id="closeBtn" aria-label="بستن منو"><i class="ti ti-x" aria-hidden="true"></i></button>
-    </div>
-
-    <button class="add-btn" id="openAddModal">
-      <i class="ti ti-plus" aria-hidden="true"></i> افزودن لینک جدید
+<!-- منوی شناور (سبک عنکبوت): دکمه‌ی صورتی گوشه‌ی پایین-چپ که با کلیک باز
+     می‌شود و ستونی از دکمه‌های فقط‌آیکون بالای خودش نشان می‌دهد (بر اساس
+     طول عنوان هرکدام، بلندترین نزدیک‌تر به دکمه‌ی اصلی). دکمه‌ی «دسته‌بندی‌ها»
+     به‌جای باز شدن در همان ستون، چیپ‌های دسته‌بندی را کنار خودِ دکمه‌ی اصلی
+     منو (fab-toggle) به‌صورت کشویی باز می‌کند. -->
+<div class="fab-menu" id="fabMenu">
+  <div class="fab-panel">
+    <button class="fab-item primary" id="openAddModal" title="افزودن لینک جدید" aria-label="افزودن لینک جدید">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
     </button>
 
-    <button class="nav-item"><span class="right"><i class="ti ti-bell" aria-hidden="true"></i>نوتیفیکیشن‌ها</span><span class="count">۳</span></button>
-    <button class="nav-item"><span class="right"><i class="ti ti-clock" aria-hidden="true"></i>تاریخچه تغییرات</span></button>
-    <button class="nav-item"><span class="right"><i class="ti ti-settings" aria-hidden="true"></i>تنظیمات حساب</span></button>
-    <button class="nav-item"><span class="right"><i class="ti ti-logout" aria-hidden="true"></i>خروج</span></button>
+    <button class="fab-item" id="fabCategoriesBtn" title="دسته‌بندی‌ها" aria-label="دسته‌بندی‌ها">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    </button>
+
+    <button class="fab-item" id="fabAccountBtn" title="حساب کاربری" aria-label="حساب کاربری">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+    </button>
+
+    <button class="fab-item" id="fabThemeBtn" title="تم شب و روز" aria-label="تم شب و روز">
+      <span id="fabThemeIcon" style="display:flex;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg></span>
+    </button>
+
+    <button class="fab-item" id="notifBtn" title="نوتیفیکیشن" aria-label="نوتیفیکیشن">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20a2 2 0 0 0 4 0"/><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6"/></svg>
+      <span class="fab-item-count" id="notifBadge" style="display:none;">0</span>
+    </button>
   </div>
+
+  <!-- کشوی دسته‌بندی‌ها: همیشه کنار دکمه‌ی اصلیِ منو ظاهر می‌شود -->
+  <div class="fab-categories-flyout" id="fabCategoriesFlyout">
+    <div class="fab-chips" id="fabChips"></div>
+  </div>
+
+  <button class="fab-toggle" id="fabToggle" aria-label="باز/بسته‌کردن منو">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -438,6 +490,19 @@ async function loadLinks() {
     [...activeCats].forEach(c => { if (!existing.has(c)) activeCats.delete(c); });
   }
   renderAll();
+  updateNotifBadge();
+}
+
+// تعداد لینک‌های دارای تغییرِ خوانده‌نشده را روی آیکون زنگوله نشان می‌دهد
+function updateNotifBadge(){
+  const count = links.filter(l => l.changed).length;
+  const badge = document.getElementById('notifBadge');
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : String(count);
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 function categories(){
@@ -447,24 +512,11 @@ function categories(){
 }
 
 function renderToolbar(){
-  const bar = document.getElementById('toolbar');
+  const bar = document.getElementById('fabChips');
   bar.innerHTML = '';
-  const label = document.createElement('span');
-  label.className = 'label';
-  label.textContent = 'دسته:';
-  bar.appendChild(label);
 
   const all = categories();
   const allOn = all.length > 0 && activeCats.size === all.length;
-  const allChip = document.createElement('button');
-  allChip.className = 'chip' + (allOn ? ' active' : '');
-  allChip.textContent = 'همه';
-  allChip.onclick = () => {
-    if(allOn) activeCats.clear();
-    else all.forEach(c => activeCats.add(c.name));
-    renderAll();
-  };
-  bar.appendChild(allChip);
 
   all.forEach(c => {
     const isOn = activeCats.has(c.name);
@@ -477,6 +529,17 @@ function renderToolbar(){
     };
     bar.appendChild(chip);
   });
+
+  // چیپ «همه» همیشه آخرین است — دقیقاً مثل چیدمان سایت مرجع (عنکبوت)
+  const allChip = document.createElement('button');
+  allChip.className = 'chip' + (allOn ? ' active' : '');
+  allChip.textContent = 'همه';
+  allChip.onclick = () => {
+    if(allOn) activeCats.clear();
+    else all.forEach(c => activeCats.add(c.name));
+    renderAll();
+  };
+  bar.appendChild(allChip);
 }
 
 function facets(idx){
@@ -670,14 +733,47 @@ async function checkLinkNow(id){
 
 loadLinks();
 
-const overlay = document.getElementById('overlay');
-function toggleDrawer(show){ overlay.classList.toggle('open', show); }
-document.getElementById('menuBtn').onclick = () => toggleDrawer(true);
-document.getElementById('closeBtn').onclick = () => toggleDrawer(false);
-overlay.addEventListener('click', e => { if(e.target === overlay) toggleDrawer(false); });
+const fabMenu = document.getElementById('fabMenu');
+function toggleFab(show){
+  const next = show === undefined ? !fabMenu.classList.contains('open') : show;
+  fabMenu.classList.toggle('open', next);
+  if (!next) fabMenu.classList.remove('categories-open');
+}
+document.getElementById('fabToggle').onclick = () => toggleFab();
+// کلیک بیرون از منوی شناور، آن را می‌بندد
+document.addEventListener('click', e => {
+  if (fabMenu.classList.contains('open') && !fabMenu.contains(e.target)) toggleFab(false);
+});
+
+// دکمه‌ی «دسته‌بندی‌ها» به‌جای بستن منو، چیپ‌ها را کنار دکمه‌ی اصلی باز می‌کند
+document.getElementById('fabCategoriesBtn').onclick = (e) => {
+  e.stopPropagation();
+  fabMenu.classList.toggle('categories-open');
+};
+
+// --- تم شب و روز (ذخیره‌ی انتخاب کاربر برای بازدیدهای بعدی) ---
+const THEME_ICONS = {
+  light: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>',
+  dark: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+};
+function applyTheme(mode){
+  document.documentElement.dataset.theme = mode;
+  document.getElementById('fabThemeIcon').innerHTML = THEME_ICONS[mode];
+  try { localStorage.setItem('rasadlink-theme', mode); } catch (err) {}
+}
+applyTheme(localStorage.getItem('rasadlink-theme') === 'dark' ? 'dark' : 'light');
+document.getElementById('fabThemeBtn').onclick = () => {
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+};
+
+// --- حساب کاربری: فعلاً بدون سیستم ورود/عضویت؛ فقط جای‌گذاری‌شده برای آینده ---
+document.getElementById('fabAccountBtn').onclick = () => {
+  toggleFab(false);
+  alert('بخش «حساب کاربری» به‌زودی اضافه می‌شود.');
+};
 
 const modalOverlay = document.getElementById('modalOverlay');
-document.getElementById('openAddModal').onclick = () => { toggleDrawer(false); modalOverlay.classList.add('open'); };
+document.getElementById('openAddModal').onclick = () => { toggleFab(false); modalOverlay.classList.add('open'); };
 document.getElementById('cancelAdd').onclick = () => modalOverlay.classList.remove('open');
 modalOverlay.addEventListener('click', e => { if(e.target === modalOverlay) modalOverlay.classList.remove('open'); });
 document.getElementById('confirmAdd').onclick = async () => {
@@ -706,13 +802,13 @@ document.getElementById('confirmAdd').onclick = async () => {
   }
 };
 
-// --- پنل نوتیفیکیشن‌ها و تاریخچه‌ی کلی تغییرات (از منوی کناری) ---
+// --- پنل نوتیفیکیشن‌ها و تاریخچه‌ی کلی تغییرات ---
 const panelOverlay = document.getElementById('panelOverlay');
 document.getElementById('panelClose').onclick = () => panelOverlay.classList.remove('open');
 panelOverlay.addEventListener('click', e => { if(e.target === panelOverlay) panelOverlay.classList.remove('open'); });
 
-async function openPanel(title, fetchPath, renderItem, emptyText){
-  toggleDrawer(false);
+async function openPanel(title, fetchPath, renderItem, emptyText, footerHtml){
+  toggleFab(false);
   document.getElementById('panelTitle').textContent = title;
   const body = document.getElementById('panelBody');
   body.innerHTML = '<p style="color:var(--text-secondary); font-size:13px;">در حال بارگذاری...</p>';
@@ -725,25 +821,33 @@ async function openPanel(title, fetchPath, renderItem, emptyText){
   } catch (err) {
     body.innerHTML = '<p style="color:var(--accent-text); font-size:13px;">خطا در بارگذاری: ' + err.message + '</p>';
   }
+  if (footerHtml) body.innerHTML += footerHtml;
 }
 
-document.querySelectorAll('.nav-item')[0].onclick = () => openPanel(
+// تاریخچه‌ی کامل تغییرات دیگر دکمه‌ی جدا در منو ندارد؛ از داخل پنل
+// نوتیفیکیشن‌ها قابل‌دسترسی است (چون هر دو درباره‌ی «چه چیزی تغییر کرده»اند)
+function openHistoryPanel(){
+  openPanel(
+    'تاریخچه تغییرات',
+    '/api/history',
+    h => '<div style="border:1px solid var(--border); border-radius:8px; padding:10px 12px;">' +
+         '<div style="font-size:11.5px; color:var(--text-muted); margin-bottom:4px;">' + h.linkTitle + ' · ' + h.time + '</div>' +
+         '<div style="font-size:13px; line-height:1.7;">' + (h.addedPreview || '—') + '</div></div>',
+    'هنوز تغییری ثبت نشده است.'
+  );
+}
+
+document.getElementById('notifBtn').onclick = () => openPanel(
   'نوتیفیکیشن‌ها',
   '/api/notifications',
   n => '<div style="border:1px solid var(--border); border-radius:8px; padding:10px 12px;' + (n.isRead ? '' : ' border-color:var(--accent);') + '">' +
        '<div style="font-size:11.5px; color:var(--text-muted); margin-bottom:4px;">' + n.time + '</div>' +
        '<div style="font-size:13px;">' + n.message + '</div></div>',
-  'اعلانی وجود ندارد.'
+  'اعلانی وجود ندارد.',
+  '<button onclick="openHistoryPanel()" style="width:100%; margin-top:14px; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2); color:var(--text-primary); font-size:13px; font-family:var(--font-sans);">مشاهده‌ی تاریخچه‌ی کامل تغییرات</button>'
 );
 
-document.querySelectorAll('.nav-item')[1].onclick = () => openPanel(
-  'تاریخچه تغییرات',
-  '/api/history',
-  h => '<div style="border:1px solid var(--border); border-radius:8px; padding:10px 12px;">' +
-       '<div style="font-size:11.5px; color:var(--text-muted); margin-bottom:4px;">' + h.linkTitle + ' · ' + h.time + '</div>' +
-       '<div style="font-size:13px; line-height:1.7;">' + (h.addedPreview || '—') + '</div></div>',
-  'هنوز تغییری ثبت نشده است.'
-);
+
 </script>
 </body>
 </html>
