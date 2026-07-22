@@ -197,7 +197,7 @@
     display:inline-flex; align-items:center; gap:5px;
     font-size:11.5px; color:#B6AFDD;
   }
-  .card-time i{font-size:13px;}
+  .card-time svg{flex-shrink:0; opacity:.85;}
   /* --- دو دکمه‌ی «تب» که از گوشه‌های پایین کارت بیرون می‌زنند --- */
   .card-tab{
     position:absolute; bottom:-16px; z-index:5;
@@ -547,6 +547,14 @@ function escapeHtml(str){
 
 const CHANGE_TYPE_LABEL = { content: 'تغییر محتوا', new_link: 'لینک جدید', new_image: 'تصویر جدید' };
 
+// آیکون‌های SVG داخلی برای عناصر کارت — برخلاف فونت Tabler Icons (که به بارگذاری
+// موفق یک فایل خارجی از cdnjs وابسته است و ممکن است در اتصال کند/ناپایدار لود
+// نشود)، این‌ها بخشی از خودِ HTML هستند و همیشه نمایش داده می‌شوند.
+const SVG_CLOCK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>';
+const SVG_BELL = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20a2 2 0 0 0 4 0"/><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6"/></svg>';
+const SVG_CHECK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L19 7"/></svg>';
+const SVG_CHEVRON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>';
+
 function renderGrid(){
   const grid = document.getElementById('grid');
   const empty = document.getElementById('empty');
@@ -576,7 +584,7 @@ function renderGrid(){
       ? (CHANGE_TYPE_LABEL[l.latestChangeType] || 'تغییر جدید')
       : 'بدون تغییر';
     const tabChangesCls = 'card-tab card-tab-changes' + (l.changed ? '' : ' idle');
-    const tabChangesIcon = l.changed ? 'ti-bell-ringing' : 'ti-check';
+    const tabChangesIcon = l.changed ? SVG_BELL : SVG_CHECK;
 
     card.innerHTML =
       '<div class="card-inner">' +
@@ -589,11 +597,11 @@ function renderGrid(){
         '</div>' +
         '<div class="card-footer">' +
           '<img class="site-favicon" src="' + faviconUrl(l.domain) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
-          '<span class="card-time"><i class="ti ti-clock" aria-hidden="true"></i>' + l.time + '</span>' +
+          '<span class="card-time">' + SVG_CLOCK + l.time + '</span>' +
         '</div>' +
       '</div>' +
-      '<span class="' + tabChangesCls + '"><span class="tab-dot"><i class="ti ' + tabChangesIcon + '" aria-hidden="true"></i></span>' + changeLabel + '</span>' +
-      '<span class="card-tab card-tab-more">بیشتر<span class="tab-arrow"><i class="ti ti-chevron-left" aria-hidden="true"></i></span></span>';
+      '<span class="' + tabChangesCls + '"><span class="tab-dot">' + tabChangesIcon + '</span>' + changeLabel + '</span>' +
+      '<span class="card-tab card-tab-more">بیشتر<span class="tab-arrow">' + SVG_CHEVRON + '</span></span>';
 
     const cardDelay = idx * 90;
     card.style.animationDelay = cardDelay + 'ms';
