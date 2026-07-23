@@ -27,6 +27,15 @@ function toDomain(url) {
   }
 }
 
+// وقتی خلاصه‌ی هوش‌مصنوعی موجود نباشد (کلید Mistral تنظیم نشده یا خطا داده)،
+// به‌جای نمایش مستقیمِ آدرس خام لینک/تصویر (که هم زشت است هم چون یک رشته‌ی
+// طولانیِ بدون فاصله است می‌تواند چیدمان گرید را بشکند)، یک پیام خوانا نشان می‌دهیم.
+function friendlyChangeFallback(changeType, preview) {
+  if (changeType === 'new_link') return 'یک صفحه/لینک جدید شناسایی شد';
+  if (changeType === 'new_image') return 'یک تصویر/بنر جدید شناسایی شد';
+  return preview || null; // برای نوع «content» خودِ preview متن خوانایی است
+}
+
 // شکل خروجی دقیقاً منطبق با چیزی است که فرانت‌اند فعلی (آرایه‌ی links) انتظار دارد
 // + چند فیلد اضافه‌ی مفید (id، url کامل، آدرس اسکرین‌شات) برای تعامل کامل با بک‌اند.
 function serialize(row) {
@@ -47,7 +56,7 @@ function serialize(row) {
     createdAt: row.created_at,
     // آخرین تغییرِ ثبت‌شده (برای نمایش مستقیم روی کارت، بدون نیاز به درخواست جدا)
     latestChangeType: row.latest_change_type || null,
-    latestSummary: row.latest_ai_summary || row.latest_added_preview || null,
+    latestSummary: row.latest_ai_summary || friendlyChangeFallback(row.latest_change_type, row.latest_added_preview),
     latestIsPromotional: Boolean(row.latest_is_promotional),
     latestChangeAt: row.latest_detected_at || null,
   };
