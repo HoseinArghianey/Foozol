@@ -66,7 +66,7 @@
     --coral-text:#FF6D9C;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0; padding:0;}
+  html,body{margin:0; padding:0; overflow-x:hidden;}
   body{
     font-family:var(--font-sans);
     background:var(--bg);
@@ -126,9 +126,13 @@
   }
   /* .card = پوسته‌ی بیرونی، overflow باز تا دو دکمه‌ی گوشه بتوانند از لبه‌ی
      کارت بیرون بزنند (دقیقاً مثل نمونه‌ای که کاربر خواسته)؛ .card-inner همان
-     مستطیل تیره‌ی گردشده‌ای‌ست که overflow آن بسته است (برای گرد بودن گوشه‌های عکس) */
+     مستطیل تیره‌ی گردشده‌ای‌ست که overflow آن بسته است (برای گرد بودن گوشه‌های عکس)
+     min-width:0 حیاتی است: بدون آن، یک متن طولانیِ بدون فاصله (مثل یک آدرس
+     خام) به‌طور پیش‌فرض ستون گرید را مجبور می‌کند بزرگ‌تر از سهم خودش بشود و
+     کل چیدمان را نامنظم/بیرون‌زده می‌کند. */
   .card{
     position:relative;
+    min-width:0;
     cursor:pointer;
     transition:transform .25s ease;
   }
@@ -171,18 +175,20 @@
   }
   /* --- بخش وسط: عنوان + خلاصه‌ی تغییر تولیدشده با هوش‌مصنوعی (میسترال) --- */
   .card-body{
-    flex:1; padding:18px 20px 14px;
+    flex:1; padding:18px 20px 14px; min-width:0;
     display:flex; flex-direction:column; gap:8px;
     color:var(--text-primary);
   }
-  .card-title{font-size:16.5px; font-weight:600; line-height:1.4; color:var(--text-primary);}
+  .card-title{font-size:16.5px; font-weight:600; line-height:1.4; color:var(--text-primary); overflow-wrap:anywhere;}
   .card-domain{
     font-family:var(--font-mono); font-size:11px; color:var(--text-muted);
     direction:ltr; text-align:right; unicode-bidi:plaintext;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .card-summary{
     font-size:12.5px; line-height:1.8; color:var(--text-secondary);
     display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+    overflow-wrap:anywhere;
   }
   .card-summary.promo{color:var(--text-muted);}
   .card-summary.promo::before{
