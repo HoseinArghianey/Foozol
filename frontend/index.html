@@ -352,6 +352,21 @@
     background:var(--accent); color:#fff; font-size:13.5px; font-weight:500;
   }
 
+  /* --- آیتم‌های تاریخچه‌ی تغییرات: دکمه‌ی لینک/تصویر جدید + جعبه‌ی خلاصه‌ی هوش‌مصنوعی --- */
+  .history-item{border:1px solid var(--border); border-radius:8px; padding:10px 12px;}
+  .history-item-time{font-size:11.5px; color:var(--text-muted); margin-bottom:8px;}
+  .history-link-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--accent); color:#fff; font-size:12.5px; font-weight:600;
+    padding:7px 14px; border-radius:999px; text-decoration:none; border:none;
+  }
+  .history-link-btn:hover{background:var(--accent-strong);}
+  .history-summary-box{
+    margin-top:8px; padding:9px 12px; border-radius:8px;
+    background:var(--surface-2); border:1px solid var(--border);
+    font-size:12.5px; line-height:1.8; color:var(--text-secondary);
+  }
+
   @media (max-width:480px){
     main{padding:14px 14px 120px;}
     .fab-menu{bottom:16px; left:16px;}
@@ -623,6 +638,33 @@ function escapeHtml(str){
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// یک آیتم تاریخچه را نمایش می‌دهد. برای «لینک/تصویر جدید»، به‌جای نمایش
+// آدرس خام به‌عنوان متن، یک دکمه‌ی واقعی برای باز کردن آن + یک جعبه‌ی جدا
+// برای خلاصه‌ی تولیدشده با هوش‌مصنوعی نشان می‌دهد.
+function renderHistoryEntry(h, opts){
+  opts = opts || {};
+  const isLinkLike = h.changeType === 'new_link' || h.changeType === 'new_image';
+  const btnLabel = h.changeType === 'new_image' ? 'مشاهده تصویر جدید' : 'مشاهده لینک جدید';
+  const summaryText = h.aiSummary || (isLinkLike ? 'خلاصه‌ای برای این مورد در دسترس نیست.' : (h.addedPreview || '—'));
+
+  let head = escapeHtml(h.time);
+  if (opts.showLinkTitle && h.linkTitle) head = escapeHtml(h.linkTitle) + ' · ' + head;
+
+  let body = '';
+  if (isLinkLike && h.addedPreview) {
+    body =
+      '<a href="' + escapeHtml(h.addedPreview) + '" target="_blank" rel="noopener noreferrer" class="history-link-btn">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>' +
+        btnLabel +
+      '</a>' +
+      '<div class="history-summary-box">' + escapeHtml(summaryText) + '</div>';
+  } else {
+    body = '<div class="history-summary-box" style="margin-top:0;">' + escapeHtml(summaryText) + '</div>';
+  }
+
+  return '<div class="history-item"><div class="history-item-time">' + head + '</div>' + body + '</div>';
+}
+
 const CHANGE_TYPE_LABEL = { content: 'تغییر محتوا', new_link: 'لینک جدید', new_image: 'تصویر جدید' };
 
 // آیکون‌های SVG داخلی برای عناصر کارت — برخلاف فونت Tabler Icons (که به بارگذاری
@@ -715,12 +757,7 @@ async function openLinkDetail(link){
     html += '<div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">تاریخچه‌ی تغییرات محتوایی:</div>';
     if (history.length) {
       html += '<div style="display:flex; flex-direction:column; gap:10px;">';
-      history.forEach(h => {
-        html += '<div style="border:1px solid var(--border); border-radius:8px; padding:10px 12px;">' +
-          '<div style="font-size:11.5px; color:var(--text-muted); margin-bottom:4px;">' + h.time + '</div>' +
-          '<div style="font-size:13px; color:var(--text-primary); line-height:1.7;">' + (h.addedPreview || '—') + '</div>' +
-          '</div>';
-      });
+      history.forEach(h => { html += renderHistoryEntry(h); });
       html += '</div>';
     } else {
       html += '<p style="color:var(--text-muted); font-size:13px;">هنوز تغییری برای این لینک ثبت نشده است.</p>';
@@ -845,9 +882,7 @@ function openHistoryPanel(){
   openPanel(
     'تاریخچه تغییرات',
     '/api/history',
-    h => '<div style="border:1px solid var(--border); border-radius:8px; padding:10px 12px;">' +
-         '<div style="font-size:11.5px; color:var(--text-muted); margin-bottom:4px;">' + h.linkTitle + ' · ' + h.time + '</div>' +
-         '<div style="font-size:13px; line-height:1.7;">' + (h.addedPreview || '—') + '</div></div>',
+    h => renderHistoryEntry(h, { showLinkTitle: true }),
     'هنوز تغییری ثبت نشده است.'
   );
 }
