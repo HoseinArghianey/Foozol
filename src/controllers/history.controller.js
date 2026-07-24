@@ -3,7 +3,7 @@ const { timeAgoFa } = require('../utils/timeAgo');
 
 async function listAllHistory(req, res) {
   const { rows } = await pool.query(
-    `SELECT change_logs.*, links.title AS link_title, links.category AS link_category
+    `SELECT change_logs.*, links.title AS link_title, links.category AS link_category, links.url AS link_url
      FROM change_logs
      JOIN links ON links.id = change_logs.link_id
      ORDER BY change_logs.detected_at DESC
@@ -22,6 +22,9 @@ async function listAllHistory(req, res) {
       addedChars: r.added_chars,
       aiSummary: r.ai_summary,
       isPromotional: r.is_promotional,
+      // آدرس خودِ صفحه‌ی رصدشده — برای «تصویر جدید» باید کاربر به همین صفحه
+      // برود، نه به آدرس خامِ فایل عکس
+      linkUrl: r.link_url,
     }))
   );
 }
