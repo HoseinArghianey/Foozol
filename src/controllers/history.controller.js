@@ -17,8 +17,11 @@ async function listAllHistory(req, res) {
       category: r.link_category,
       detectedAt: r.detected_at,
       time: timeAgoFa(r.detected_at),
+      changeType: r.change_type,
       addedPreview: r.added_preview,
       addedChars: r.added_chars,
+      aiSummary: r.ai_summary,
+      isPromotional: r.is_promotional,
     }))
   );
 }
