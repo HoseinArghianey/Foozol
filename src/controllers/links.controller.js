@@ -212,7 +212,11 @@ async function requestScreenshot(req, res) {
 async function getLinkHistory(req, res) {
   const { id } = req.params;
   const { rows } = await pool.query(
-    `SELECT * FROM change_logs WHERE link_id = $1 ORDER BY detected_at DESC LIMIT 100`,
+    `SELECT change_logs.*, links.url AS link_url
+     FROM change_logs
+     JOIN links ON links.id = change_logs.link_id
+     WHERE change_logs.link_id = $1
+     ORDER BY change_logs.detected_at DESC LIMIT 100`,
     [id]
   );
   res.json(
@@ -225,6 +229,9 @@ async function getLinkHistory(req, res) {
       addedChars: r.added_chars,
       aiSummary: r.ai_summary,
       isPromotional: r.is_promotional,
+      // آدرس خودِ صفحه‌ی رصدشده — برای «تصویر جدید» باید کاربر به همین صفحه
+      // برود (جایی که عکس واقعاً در آن دیده می‌شود)، نه به آدرس خامِ فایل عکس
+      linkUrl: r.link_url,
     }))
   );
 }
