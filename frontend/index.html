@@ -638,22 +638,25 @@ function escapeHtml(str){
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// یک آیتم تاریخچه را نمایش می‌دهد. برای «لینک/تصویر جدید»، به‌جای نمایش
-// آدرس خام به‌عنوان متن، یک دکمه‌ی واقعی برای باز کردن آن + یک جعبه‌ی جدا
-// برای خلاصه‌ی تولیدشده با هوش‌مصنوعی نشان می‌دهد.
+// یک آیتم تاریخچه را نمایش می‌دهد. برای «لینک جدید»، دکمه به همان صفحه‌ی
+// واقعیِ جدید (مثلاً صفحه‌ی محصول) می‌رود. برای «تصویر جدید»، دکمه عمداً به
+// آدرس خامِ فایل عکس نمی‌رود (که برای کاربر بی‌فایده است)، بلکه به خودِ
+// صفحه‌ی رصدشده می‌رود — همان‌جایی که آن عکس واقعاً در آن دیده می‌شود.
 function renderHistoryEntry(h, opts){
   opts = opts || {};
-  const isLinkLike = h.changeType === 'new_link' || h.changeType === 'new_image';
-  const btnLabel = h.changeType === 'new_image' ? 'مشاهده تصویر جدید' : 'مشاهده لینک جدید';
-  const summaryText = h.aiSummary || (isLinkLike ? 'خلاصه‌ای برای این مورد در دسترس نیست.' : (h.addedPreview || '—'));
+  const isNewLink = h.changeType === 'new_link';
+  const isNewImage = h.changeType === 'new_image';
+  const btnTarget = isNewLink ? h.addedPreview : (isNewImage ? h.linkUrl : null);
+  const btnLabel = isNewImage ? 'مشاهده در صفحه‌ی مبدأ' : 'مشاهده لینک جدید';
+  const summaryText = h.aiSummary || ((isNewLink || isNewImage) ? 'خلاصه‌ای برای این مورد در دسترس نیست.' : (h.addedPreview || '—'));
 
   let head = escapeHtml(h.time);
   if (opts.showLinkTitle && h.linkTitle) head = escapeHtml(h.linkTitle) + ' · ' + head;
 
   let body = '';
-  if (isLinkLike && h.addedPreview) {
+  if (btnTarget) {
     body =
-      '<a href="' + escapeHtml(h.addedPreview) + '" target="_blank" rel="noopener noreferrer" class="history-link-btn">' +
+      '<a href="' + escapeHtml(btnTarget) + '" target="_blank" rel="noopener noreferrer" class="history-link-btn">' +
         '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>' +
         btnLabel +
       '</a>' +
