@@ -113,26 +113,35 @@
   }
   .chip .count{opacity:.75; font-size:11px; margin-right:4px;}
 
+  /* ماسونری واقعی (سبک پینترست): به‌جای grid معمولی که همه‌ی کارت‌های یک
+     ردیف را مجبور به هم‌ارتفاعی می‌کند (و فضای خالی زیر کارت‌های کوتاه‌تر
+     می‌گذارد)، از CSS چندستونی استفاده می‌کنیم — هر کارت دقیقاً زیر کارت
+     قبلیِ همان ستون قرار می‌گیرد، بدون فاصله‌ی اضافه. */
   .grid{
-    display:grid;
-    grid-template-columns:1fr;
-    gap:34px;
+    column-count:1;
+    column-gap:34px;
   }
   @media (min-width:700px){
-    .grid{grid-template-columns:1fr 1fr;}
+    .grid{column-count:2;}
   }
   @media (min-width:1040px){
-    .grid{grid-template-columns:1fr 1fr 1fr;}
+    .grid{column-count:3;}
   }
   /* .card = پوسته‌ی بیرونی، overflow باز تا دو دکمه‌ی گوشه بتوانند از لبه‌ی
      کارت بیرون بزنند (دقیقاً مثل نمونه‌ای که کاربر خواسته)؛ .card-inner همان
      مستطیل تیره‌ی گردشده‌ای‌ست که overflow آن بسته است (برای گرد بودن گوشه‌های عکس)
      min-width:0 حیاتی است: بدون آن، یک متن طولانیِ بدون فاصله (مثل یک آدرس
-     خام) به‌طور پیش‌فرض ستون گرید را مجبور می‌کند بزرگ‌تر از سهم خودش بشود و
-     کل چیدمان را نامنظم/بیرون‌زده می‌کند. */
+     خام) می‌تواند عرض ستون را به‌هم بزند.
+     break-inside:avoid حیاتیِ ماسونری است: بدون آن، یک کارت ممکن است وسط
+     ستون از بالا به پایین بریده و بین دو ستون پخش شود. */
   .card{
     position:relative;
     min-width:0;
+    width:100%;
+    margin-bottom:34px;
+    break-inside:avoid;
+    -webkit-column-break-inside:avoid;
+    display:inline-block;
     cursor:pointer;
     transition:transform .25s ease;
   }
